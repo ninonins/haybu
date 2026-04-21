@@ -1,27 +1,16 @@
-import { useMemo } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Activity, AlertTriangle, CheckCircle2, ServerCrash, Sparkles } from "lucide-react";
-import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui.jsx";
+import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle, Tabs, TabsList, TabsTrigger } from "../components/ui.jsx";
 import { apiFetch } from "../lib/api.js";
 import { ErrorState, LoadingState, MetricCard, PageHeader } from "./shared.jsx";
 
-function buildTrend(summary) {
-  const total = summary.totalDevices || 0;
-  return Array.from({ length: 12 }).map((_, index) => {
-    const variance = (index % 4) + 1;
-    return {
-      name: `W${index + 1}`,
-      online: Math.max(0, (summary.onlineDevices || 0) - variance + (index % 3)),
-      incidents: Math.max(0, (summary.offlineDevices || 0) + (index % 2))
-    };
-  });
-}
-
 export default function DashboardPage() {
+  const [range, setRange] = useState("weekly");
   const { data, isLoading, error } = useQuery({
-    queryKey: ["dashboard"],
-    queryFn: () => apiFetch("/reports/dashboard")
+    queryKey: ["dashboard", range],
+    queryFn: () => apiFetch(`/reports/dashboard?range=${range}`)
   });
 
   const summary = data?.summary ?? {
@@ -35,7 +24,7 @@ export default function DashboardPage() {
       degraded: 0
     }
   };
-  const trend = useMemo(() => buildTrend(summary), [summary]);
+  const trend = data?.trend ?? [];
 
   if (isLoading) return <LoadingState title="Dashboard" />;
   if (error) return <ErrorState description={error.message} />;
@@ -44,7 +33,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Overview"
-        title="Heartbeat command center"
+        title="Haybu command center"
         description="Operational visibility across devices, monitored services, and raw retention-sensitive fleet health."
         actions={<Badge variant="outline" className="rounded-full px-3 py-1">Live data</Badge>}
       />
@@ -85,12 +74,13 @@ export default function DashboardPage() {
           <CardHeader className="flex flex-row items-start justify-between gap-4">
             <div>
               <CardTitle>Fleet trend</CardTitle>
-              <CardDescription>Illustrative recent availability based on live summary counters.</CardDescription>
+              <CardDescription>Availability trend based on compact heartbeat history across the selected time grain.</CardDescription>
             </div>
-            <Tabs defaultValue="12w">
+            <Tabs value={range} onValueChange={setRange}>
               <TabsList>
-                <TabsTrigger value="12w">12 weeks</TabsTrigger>
-                <TabsTrigger value="4w">4 weeks</TabsTrigger>
+                <TabsTrigger value="hourly">Hourly</TabsTrigger>
+                <TabsTrigger value="daily">Daily</TabsTrigger>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
               </TabsList>
             </Tabs>
           </CardHeader>
@@ -118,7 +108,9 @@ export default function DashboardPage() {
                       borderRadius: "12px"
                     }}
                   />
+                  <Legend />
                   <Area type="monotone" dataKey="online" stroke="hsl(var(--chart-1))" fill="url(#onlineFill)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="degraded" stroke="hsl(var(--chart-3))" fillOpacity={0} strokeWidth={2} />
                   <Area type="monotone" dataKey="incidents" stroke="hsl(var(--chart-5))" fill="url(#incidentFill)" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>

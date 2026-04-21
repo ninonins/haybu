@@ -1,9 +1,11 @@
-# Device Heartbeat Platform
+# Haybu
 
-This repository now contains two tracks:
+Haybu is a device heartbeat and service uptime platform. The name is a play on "buhay pa ba?" or "is it still alive?"
+
+This repository contains two tracks:
 
 - `server.js` and `client.js`: legacy prototype reference.
-- `apps/api`, `apps/web`, `apps/edge-agent`: the new full-stack heartbeat platform.
+- `apps/api`, `apps/web`, `apps/edge-agent`: the new full-stack Haybu platform.
 
 ## Stack
 
@@ -59,7 +61,7 @@ python3 -m edge_agent.cli --config ../../.env.edge
 
 ## Core flows
 
-- Admin signs in through the portal.
+- Admin signs in through the Haybu portal.
 - Edge agent requests a pairing session and displays a one-time code.
 - Admin enters the code in the portal.
 - API issues a device credential.

@@ -1,6 +1,9 @@
+import { useEffect } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "./components/app-shell.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import { bootstrapSession } from "./lib/api.js";
+import { useAuthStore } from "./store/auth.js";
 import AdminSettingsPage from "./pages/AdminSettingsPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import DeviceDetailPage from "./pages/DeviceDetailPage.jsx";
@@ -11,6 +14,16 @@ import ReportsPage from "./pages/ReportsPage.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
 
 export default function App() {
+  const hydrated = useAuthStore((state) => state.hydrated);
+  const setHydrating = useAuthStore((state) => state.setHydrating);
+
+  useEffect(() => {
+    if (hydrated) return;
+
+    setHydrating(true);
+    bootstrapSession();
+  }, [hydrated, setHydrating]);
+
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />

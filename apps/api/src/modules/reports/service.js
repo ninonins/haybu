@@ -1,4 +1,4 @@
-import { fn, col } from "sequelize";
+import { fn, col, Op } from "sequelize";
 import { Device, Heartbeat, ReportSummary, ServiceStatusEvent } from "../../db/models.js";
 
 export async function getDashboardSummary() {
@@ -21,6 +21,75 @@ export async function getDashboardSummary() {
   }, {});
 
   return summary;
+}
+
+export async function getDashboardTrend({ range = "12w" } = {}) {
+  const configMap = {
+    hourly: {
+      bucketCount: 24,
+      bucketMs: 60 * 60 * 1000,
+      formatLabel: (date) =>
+        new Intl.DateTimeFormat("en-US", { hour: "numeric" }).format(date)
+    },
+    daily: {
+      bucketCount: 14,
+      bucketMs: 24 * 60 * 60 * 1000,
+      formatLabel: (date) =>
+        new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date)
+    },
+    weekly: {
+      bucketCount: 12,
+      bucketMs: 7 * 24 * 60 * 60 * 1000,
+      formatLabel: (_date, index) => `W${index + 1}`
+    }
+  };
+  const config = configMap[range] || configMap.weekly;
+
+  const now = Date.now();
+  const startMs = now - config.bucketCount * config.bucketMs;
+  const heartbeats = await Heartbeat.findAll({
+    where: {
+      receivedAt: {
+        [Op.gte]: new Date(startMs)
+      }
+    },
+    attributes: ["receivedAt", "status"],
+    order: [["receivedAt", "ASC"]]
+  });
+
+  const buckets = Array.from({ length: config.bucketCount }).map((_, index) => {
+    const bucketStart = new Date(startMs + index * config.bucketMs);
+    return {
+      name: config.formatLabel(bucketStart, index),
+      startAt: bucketStart.toISOString(),
+      endAt: new Date(startMs + (index + 1) * config.bucketMs).toISOString(),
+      online: 0,
+      incidents: 0,
+      degraded: 0,
+      total: 0
+    };
+  });
+  ;
+
+  for (const heartbeat of heartbeats) {
+    const receivedAt = new Date(heartbeat.receivedAt).getTime();
+    const bucketIndex = Math.min(
+      config.bucketCount - 1,
+      Math.max(0, Math.floor((receivedAt - startMs) / config.bucketMs))
+    );
+    const bucket = buckets[bucketIndex];
+    bucket.total += 1;
+    if (heartbeat.status === "online") {
+      bucket.online += 1;
+    } else if (heartbeat.status === "degraded") {
+      bucket.degraded += 1;
+      bucket.incidents += 1;
+    } else {
+      bucket.incidents += 1;
+    }
+  }
+
+  return buckets;
 }
 
 export async function getUptimeReport({ deviceId }) {

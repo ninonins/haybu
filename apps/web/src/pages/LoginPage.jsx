@@ -36,8 +36,8 @@ export default function LoginPage() {
               <Activity className="h-6 w-6" />
             </div>
             <div>
-              <div className="text-xl font-semibold">Heartbeat Portal</div>
-              <div className="text-sm text-muted-foreground">Presentable fleet operations</div>
+              <div className="text-xl font-semibold">Haybu</div>
+              <div className="text-sm text-muted-foreground">Device heartbeat and uptime operations</div>
             </div>
           </div>
           <div className="mt-auto space-y-6">

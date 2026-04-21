@@ -1,12 +1,13 @@
 import express from "express";
 import { requireAuth } from "../../middleware/auth.js";
-import { getDashboardSummary, getUptimeReport, exportUptimeCsv } from "./service.js";
+import { getDashboardSummary, getDashboardTrend, getUptimeReport, exportUptimeCsv } from "./service.js";
 
 const router = express.Router();
 
 router.get("/dashboard", requireAuth, async (_req, res) => {
   const summary = await getDashboardSummary();
-  res.json({ summary });
+  const trend = await getDashboardTrend({ range: _req.query.range || "12w" });
+  res.json({ summary, trend });
 });
 
 router.get("/uptime", requireAuth, async (req, res) => {

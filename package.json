@@ -1,5 +1,5 @@
 {
-  "name": "node-heartbeat-platform",
+  "name": "haybu-platform",
   "private": true,
   "version": "1.0.0",
   "description": "Device heartbeat monitoring platform monorepo",

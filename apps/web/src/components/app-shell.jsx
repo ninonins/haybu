@@ -31,7 +31,7 @@ export default function AppShell() {
                 </div>
                 <div>
                   <Link to="/" className="text-xl font-semibold tracking-tight">
-                    Heartbeat
+                    Haybu
                   </Link>
                   <p className="text-sm text-muted-foreground">Device operations</p>
                 </div>
@@ -103,9 +103,6 @@ export default function AppShell() {
                     <Bell className="h-4 w-4" />
                   </Button>
                   <ThemeToggle />
-                  <Button variant="outline" className="hidden rounded-xl md:inline-flex">
-                    GitHub
-                  </Button>
                 </div>
               </div>
             </header>
