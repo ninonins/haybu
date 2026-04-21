@@ -1,0 +1,12 @@
+.env.server
+.env.client
+data/
+node_modules
+.env
+.venv
+dist
+coverage
+.pytest_cache
+__pycache__
+*.pyc
+apps/edge-agent/.venv

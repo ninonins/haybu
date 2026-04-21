@@ -1,0 +1,240 @@
+{
+  "device_uid": "23919cd2-b96a-408f-9b12-b785076abdb2",
+  "fingerprint": "meldCX-Nino-Mac2-8.local",
+  "credential": "5017a88f733bc45ba201b63c98dd8a25371f740c65f4a1749e41359917b99bb6",
+  "monitoring": {
+    "services": []
+  },
+  "last_inventory": {
+    "hostname": "meldCX-Nino-Mac2-8.local",
+    "platform": "macOS-26.3.1-arm64-arm-64bit",
+    "system": "Darwin",
+    "release": "25.3.0",
+    "machine": "arm64",
+    "processor": "arm",
+    "pythonVersion": "3.12.2",
+    "cpuCountLogical": 11,
+    "cpuCountPhysical": 11,
+    "memoryTotalBytes": 19327352832,
+    "bootTime": "2026-04-15T02:08:00+00:00",
+    "networkInterfaces": [
+      {
+        "name": "lo0",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "en0",
+        "ips": [
+          "192.168.3.116"
+        ],
+        "mac": "22:f8:d9:e1:19:91"
+      },
+      {
+        "name": "en12",
+        "ips": [
+          "192.168.3.16"
+        ],
+        "mac": "6c:1f:f7:24:d0:c6"
+      },
+      {
+        "name": "anpi1",
+        "ips": [],
+        "mac": "a6:76:62:c0:1b:25"
+      },
+      {
+        "name": "anpi0",
+        "ips": [],
+        "mac": "a6:76:62:c0:1b:24"
+      },
+      {
+        "name": "anpi2",
+        "ips": [],
+        "mac": "a6:76:62:c0:1b:26"
+      },
+      {
+        "name": "en4",
+        "ips": [],
+        "mac": "a6:76:62:c0:1b:04"
+      },
+      {
+        "name": "en5",
+        "ips": [],
+        "mac": "a6:76:62:c0:1b:05"
+      },
+      {
+        "name": "en8",
+        "ips": [],
+        "mac": "a6:76:62:c0:1b:06"
+      },
+      {
+        "name": "en1",
+        "ips": [],
+        "mac": "36:31:81:c8:15:c0"
+      },
+      {
+        "name": "en2",
+        "ips": [],
+        "mac": "36:31:81:c8:15:c4"
+      },
+      {
+        "name": "en3",
+        "ips": [],
+        "mac": "36:31:81:c8:15:c8"
+      },
+      {
+        "name": "bridge0",
+        "ips": [],
+        "mac": "36:31:81:c8:15:c0"
+      },
+      {
+        "name": "ap1",
+        "ips": [],
+        "mac": "9e:87:ef:88:ae:b0"
+      },
+      {
+        "name": "awdl0",
+        "ips": [],
+        "mac": "02:32:4b:0b:46:d9"
+      },
+      {
+        "name": "llw0",
+        "ips": [],
+        "mac": "02:32:4b:0b:46:d9"
+      },
+      {
+        "name": "utun0",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun1",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun2",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun3",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun4",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun5",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun7",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun8",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun6",
+        "ips": [],
+        "mac": ""
+      },
+      {
+        "name": "utun9",
+        "ips": [],
+        "mac": ""
+      }
+    ],
+    "disks": [
+      {
+        "device": "/dev/disk3s1s1",
+        "mountpoint": "/",
+        "filesystem": "apfs",
+        "totalBytes": 494384795648,
+        "usedBytes": 12459241472,
+        "freeBytes": 29121220608,
+        "percentUsed": 30.0
+      },
+      {
+        "device": "/dev/disk3s6",
+        "mountpoint": "/System/Volumes/VM",
+        "filesystem": "apfs",
+        "totalBytes": 494384795648,
+        "usedBytes": 35439575040,
+        "freeBytes": 29121220608,
+        "percentUsed": 54.9
+      },
+      {
+        "device": "/dev/disk3s2",
+        "mountpoint": "/System/Volumes/Preboot",
+        "filesystem": "apfs",
+        "totalBytes": 494384795648,
+        "usedBytes": 8698548224,
+        "freeBytes": 29121220608,
+        "percentUsed": 23.0
+      },
+      {
+        "device": "/dev/disk3s4",
+        "mountpoint": "/System/Volumes/Update",
+        "filesystem": "apfs",
+        "totalBytes": 494384795648,
+        "usedBytes": 8470528,
+        "freeBytes": 29121220608,
+        "percentUsed": 0.0
+      },
+      {
+        "device": "/dev/disk1s2",
+        "mountpoint": "/System/Volumes/xarts",
+        "filesystem": "apfs",
+        "totalBytes": 524288000,
+        "usedBytes": 6311936,
+        "freeBytes": 503648256,
+        "percentUsed": 1.2
+      },
+      {
+        "device": "/dev/disk1s1",
+        "mountpoint": "/System/Volumes/iSCPreboot",
+        "filesystem": "apfs",
+        "totalBytes": 524288000,
+        "usedBytes": 5869568,
+        "freeBytes": 503648256,
+        "percentUsed": 1.2
+      },
+      {
+        "device": "/dev/disk1s3",
+        "mountpoint": "/System/Volumes/Hardware",
+        "filesystem": "apfs",
+        "totalBytes": 524288000,
+        "usedBytes": 3481600,
+        "freeBytes": 503648256,
+        "percentUsed": 0.7
+      },
+      {
+        "device": "/dev/disk3s5",
+        "mountpoint": "/System/Volumes/Data",
+        "filesystem": "apfs",
+        "totalBytes": 494384795648,
+        "usedBytes": 407209750528,
+        "freeBytes": 29121220608,
+        "percentUsed": 93.3
+      },
+      {
+        "device": "/dev/disk5s1",
+        "mountpoint": "/Volumes/Nins-External",
+        "filesystem": "apfs",
+        "totalBytes": 1023999787008,
+        "usedBytes": 162258399232,
+        "freeBytes": 861532012544,
+        "percentUsed": 15.8
+      }
+    ]
+  }
+}

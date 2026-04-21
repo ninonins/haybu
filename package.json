@@ -1,0 +1,24 @@
+{
+  "name": "node-heartbeat-platform",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Device heartbeat monitoring platform monorepo",
+  "workspaces": [
+    "apps/api",
+    "apps/web"
+  ],
+  "scripts": {
+    "db:up": "docker compose -f infra/postgres/docker-compose.yml up -d postgres",
+    "db:down": "docker compose -f infra/postgres/docker-compose.yml down",
+    "db:logs": "docker compose -f infra/postgres/docker-compose.yml logs -f postgres",
+    "db:migrate": "npm --workspace apps/api run db:migrate",
+    "db:seed-admin": "npm --workspace apps/api run db:seed-admin",
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev:web": "npm --workspace apps/web run dev",
+    "dev:edge": "cd apps/edge-agent && python3 -m edge_agent.cli --config ../../.env.edge",
+    "test": "npm run test --workspaces"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

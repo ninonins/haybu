@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: node-heartbeat-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-heartbeat}
+      POSTGRES_USER: ${POSTGRES_USER:-heartbeat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-heartbeat}
+    ports:
+      - "${POSTGRES_PORT:-55432}:5432"
+    volumes:
+      - heartbeat-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-heartbeat} -d ${POSTGRES_DB:-heartbeat}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  heartbeat-postgres-data:
