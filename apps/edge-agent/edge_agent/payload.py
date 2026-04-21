@@ -7,15 +7,28 @@ from datetime import datetime, UTC
 import psutil
 
 
+def _is_link_family(family) -> bool:
+    if family in {
+        getattr(socket, "AF_LINK", None),
+        getattr(socket, "AF_PACKET", None),
+        getattr(psutil, "AF_LINK", None),
+    }:
+        return True
+
+    family_name = getattr(family, "name", "")
+    return family_name in {"AF_LINK", "AF_PACKET"}
+
+
 def _network_interfaces() -> list[dict]:
     interfaces: list[dict] = []
     for name, addrs in psutil.net_if_addrs().items():
         ips = []
         mac = ""
         for addr in addrs:
-            if getattr(addr, "family", None) == socket.AF_LINK:
+            family = getattr(addr, "family", None)
+            if _is_link_family(family):
                 mac = addr.address
-            elif "." in addr.address and not addr.address.startswith("127."):
+            elif getattr(addr, "address", None) and "." in addr.address and not addr.address.startswith("127."):
                 ips.append(addr.address)
         interfaces.append({"name": name, "ips": ips, "mac": mac})
     return interfaces

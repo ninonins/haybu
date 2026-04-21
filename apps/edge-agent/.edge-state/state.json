@@ -95,12 +95,12 @@
       {
         "name": "awdl0",
         "ips": [],
-        "mac": "36:8f:e5:a5:25:81"
+        "mac": "6a:8f:06:9c:57:63"
       },
       {
         "name": "llw0",
         "ips": [],
-        "mac": "36:8f:e5:a5:25:81"
+        "mac": "6a:8f:06:9c:57:63"
       },
       {
         "name": "utun0",
@@ -160,17 +160,17 @@
         "filesystem": "apfs",
         "totalBytes": 494384795648,
         "usedBytes": 12459241472,
-        "freeBytes": 29158969344,
-        "percentUsed": 29.9
+        "freeBytes": 28073648128,
+        "percentUsed": 30.7
       },
       {
         "device": "/dev/disk3s6",
         "mountpoint": "/System/Volumes/VM",
         "filesystem": "apfs",
         "totalBytes": 494384795648,
-        "usedBytes": 35439591424,
-        "freeBytes": 29158969344,
-        "percentUsed": 54.9
+        "usedBytes": 36513411072,
+        "freeBytes": 28073648128,
+        "percentUsed": 56.5
       },
       {
         "device": "/dev/disk3s2",
@@ -178,16 +178,16 @@
         "filesystem": "apfs",
         "totalBytes": 494384795648,
         "usedBytes": 8698548224,
-        "freeBytes": 29158969344,
-        "percentUsed": 23.0
+        "freeBytes": 28073648128,
+        "percentUsed": 23.7
       },
       {
         "device": "/dev/disk3s4",
         "mountpoint": "/System/Volumes/Update",
         "filesystem": "apfs",
         "totalBytes": 494384795648,
-        "usedBytes": 8470528,
-        "freeBytes": 29158969344,
+        "usedBytes": 9519104,
+        "freeBytes": 28073648128,
         "percentUsed": 0.0
       },
       {
@@ -222,9 +222,9 @@
         "mountpoint": "/System/Volumes/Data",
         "filesystem": "apfs",
         "totalBytes": 494384795648,
-        "usedBytes": 407171985408,
-        "freeBytes": 29158969344,
-        "percentUsed": 93.3
+        "usedBytes": 407182438400,
+        "freeBytes": 28073648128,
+        "percentUsed": 93.6
       },
       {
         "device": "/dev/disk5s1",
