@@ -84,7 +84,7 @@ Group=$RUN_USER
 WorkingDirectory=$INSTALL_DIR
 EnvironmentFile=$INSTALL_DIR/.env
 Environment=PYTHONPATH=$INSTALL_DIR
-ExecStart=$INSTALL_DIR/venv/bin/python -m edge_agent.cli
+ExecStart=$INSTALL_DIR/venv/bin/python -m edge_agent.cli --config $INSTALL_DIR/.env
 Restart=always
 RestartSec=10
 StandardOutput=journal
