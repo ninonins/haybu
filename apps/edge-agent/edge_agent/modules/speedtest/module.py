@@ -47,6 +47,9 @@ def _run_ookla_speedtest(binary: str, server_id: str | None = None) -> dict:
     if result.returncode != 0:
         raise RuntimeError(f"speedtest failed: {result.stderr.strip() or 'unknown error'}")
 
+    if not result.stdout.strip():
+        raise RuntimeError(f"speedtest returned empty output (stderr: {result.stderr.strip() or 'none'})")
+
     data = json.loads(result.stdout)
 
     server = data.get("server", {})
@@ -85,6 +88,9 @@ def _run_speedtest_cli_package(binary: str, server_id: str | None = None) -> dic
 
     if result.returncode != 0:
         raise RuntimeError(f"speedtest-cli failed: {result.stderr.strip() or 'unknown error'}")
+
+    if not result.stdout.strip():
+        raise RuntimeError(f"speedtest-cli returned empty output (stderr: {result.stderr.strip() or 'none'})")
 
     data = json.loads(result.stdout)
 
