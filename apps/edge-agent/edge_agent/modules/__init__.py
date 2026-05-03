@@ -108,6 +108,7 @@ def _load_manifest(module_dir: Path) -> ModuleManifest | None:
 def _load_instance(module_dir: Path, entrypoint: str):
     module_file = module_dir / entrypoint
     if not module_file.exists():
+        print(f"[modules] module file not found: {module_file}")
         return None
     try:
         spec = importlib.util.spec_from_file_location(
@@ -115,8 +116,12 @@ def _load_instance(module_dir: Path, entrypoint: str):
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
+        print(f"[modules] loaded {module_dir.name} from {module_file}")
         return mod
-    except Exception:
+    except Exception as exc:
+        print(f"[modules] FAILED to load {module_dir.name}: {exc}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
