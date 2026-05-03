@@ -5,7 +5,7 @@
   "entrypoint": "module.py",
   "install": {
     "description": "Install official Ookla speedtest binary",
-    "script": "if command -v apt &>/dev/null; then curl -sL 'https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-$(uname -m).tgz' | tar xzf - -C /usr/local/bin && chmod +x /usr/local/bin/speedtest; else echo 'apt not available, install manually'; fi",
+    "script": "mkdir -p /tmp/ookla-install \u0026\u0026 cd /tmp/ookla-install \u0026\u0026 curl -sL -o speedtest.tgz 'https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-x86_64.tgz' \u0026\u0026 tar xzf speedtest.tgz \u0026\u0026 chmod +x speedtest \u0026\u0026 cp speedtest /usr/local/bin/speedtest",
     "check": "which speedtest || which speedtest-cli"
   },
   "config_schema": {
