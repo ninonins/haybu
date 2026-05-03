@@ -13,7 +13,7 @@ def _network_interfaces() -> list[dict]:
         ips = []
         mac = ""
         for addr in addrs:
-            if getattr(addr, "family", None) == socket.AF_LINK:
+            if getattr(addr, "family", None) == psutil.AF_LINK:
                 mac = addr.address
             elif "." in addr.address and not addr.address.startswith("127."):
                 ips.append(addr.address)
