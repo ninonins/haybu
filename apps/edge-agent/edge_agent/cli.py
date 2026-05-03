@@ -83,8 +83,8 @@ def heartbeat_loop(config, state: dict) -> bool:
                 current_inventory = build_system_inventory()
                 include_inventory = inventory_changed(state.get("last_inventory"), current_inventory)
 
-                # Run all enabled modules and attach results
-                module_results = module_manager.run_all()
+                # Run enabled modules only when their configured interval has elapsed.
+                module_results = module_manager.run_due()
 
                 payload = build_compact_heartbeat_payload(
                     state["device_uid"],

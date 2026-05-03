@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import os
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -106,6 +106,8 @@ class ModuleManager:
     def __init__(self):
         self._modules: dict[str, Module] = {}
         self._enabled: set[str] = set()
+        self._last_run_at: dict[str, float] = {}
+        self._pending_results: dict[str, dict] = {}
 
     def load_all(self, module_configs: dict[str, dict] | None = None):
         """Discover and init all modules with optional per-module config."""
@@ -113,8 +115,11 @@ class ModuleManager:
         self._enabled.clear()
         for mod in discover_modules():
             cfg = (module_configs or {}).get(mod.name, {})
-            mod.init(cfg)
+            module_config = cfg.get("config", {}) if isinstance(cfg, dict) else {}
+            mod.init(module_config)
             self._modules[mod.name] = mod
+            if isinstance(cfg, dict) and cfg.get("enabled"):
+                self._enabled.add(mod.name)
 
     def enable(self, name: str, config: dict | None = None) -> bool:
         mod = self._modules.get(name)
@@ -131,10 +136,48 @@ class ModuleManager:
         if mod:
             mod.teardown()
         self._enabled.discard(name)
+        self._last_run_at.pop(name, None)
+        self._pending_results.pop(name, None)
         return True
 
     def is_enabled(self, name: str) -> bool:
         return name in self._enabled
+
+    def _interval_seconds(self, mod: Module) -> float | None:
+        interval = mod._config.get("intervalSeconds")
+        if interval is None or interval == "":
+            return None
+        try:
+            parsed = float(interval)
+            return parsed if parsed > 0 else None
+        except (TypeError, ValueError):
+            return None
+
+    def _is_due(self, name: str, mod: Module, now: float) -> bool:
+        interval = self._interval_seconds(mod)
+        if interval is None:
+            return True
+        last_run_at = self._last_run_at.get(name)
+        return last_run_at is None or now - last_run_at >= interval
+
+    def run_due(self) -> dict[str, dict]:
+        """Run enabled modules whose interval has elapsed and return their results."""
+        results: dict[str, dict] = self._pending_results
+        self._pending_results = {}
+        now = time.monotonic()
+        for name in self._enabled:
+            mod = self._modules.get(name)
+            if name in results or not mod or not self._is_due(name, mod, now):
+                continue
+            try:
+                result = mod.run()
+                self._last_run_at[name] = time.monotonic()
+                if result is not None:
+                    results[name] = {"result": result}
+            except Exception as exc:
+                self._last_run_at[name] = time.monotonic()
+                results[name] = {"error": str(exc)}
+        return results
 
     def run_all(self) -> dict[str, dict]:
         """Run all enabled modules and return their results."""
@@ -145,9 +188,11 @@ class ModuleManager:
                 continue
             try:
                 result = mod.run()
+                self._last_run_at[name] = time.monotonic()
                 if result is not None:
                     results[name] = {"result": result}
             except Exception as exc:
+                self._last_run_at[name] = time.monotonic()
                 results[name] = {"error": str(exc)}
         return results
 
@@ -163,13 +208,19 @@ class ModuleManager:
         try:
             if action == "run":
                 result = mod.run()
+                self._last_run_at[name] = time.monotonic()
+                if result is not None:
+                    self._pending_results[name] = {"result": result}
                 return {"result": result} if result is not None else {}
             if hasattr(mod.instance, action):
                 handler = getattr(mod.instance, action)
                 result = handler()
+                if result is not None:
+                    self._pending_results[name] = {"result": result}
                 return {"result": result} if result is not None else {}
             return {"error": f"Action {action} not supported by module {name}"}
         except Exception as exc:
+            self._pending_results[name] = {"error": str(exc)}
             return {"error": str(exc)}
 
     def get_status(self) -> dict[str, dict]:

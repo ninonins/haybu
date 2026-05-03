@@ -29,7 +29,7 @@ def init(config: dict) -> None:
     pass
 
 def run(**kwargs) -> dict | None:
-    """Called on each heartbeat or when a run command is dispatched.
+    """Called when the module interval has elapsed or when a run command is dispatched.
     Return a dict of metric key-value pairs, or None if no data."""
     pass
 
@@ -47,14 +47,15 @@ Each module also needs a `manifest.json`:
   "description": "Internet speed test using speedtest-cli",
   "entrypoint": "module.py",
   "config_schema": {
-    "intervalSeconds": { "type": "number", "default": 3600, "min": 300, "max": 86400 }
+    "intervalSeconds": { "type": "number", "default": 3600, "min": 300, "max": 86400 },
+    "serverId": { "type": "string", "default": "" }
   }
 }
 ```
 
 ### Heartbeat Extension
 
-When enabled modules run, their output is attached to the heartbeat payload:
+When enabled modules run, their output is attached to the heartbeat payload. If `config.intervalSeconds` is set, the edge agent runs the module only after that interval has elapsed; if it is omitted, the module runs on every heartbeat.
 
 ```json
 {
@@ -71,6 +72,79 @@ When enabled modules run, their output is attached to the heartbeat payload:
       }
     }
   }
+}
+```
+
+---
+
+## Speedtest Module Setup
+
+The `speedtest` module needs either the official Ookla CLI or the Python `speedtest-cli` package on each edge device.
+
+### Install a Speedtest Binary
+
+Preferred, official Ookla CLI:
+
+```bash
+# Debian/Ubuntu example; follow Ookla's package repo instructions for production hosts.
+sudo apt-get update
+sudo apt-get install speedtest
+speedtest --accept-license --accept-gdpr
+```
+
+Fallback Python package:
+
+```bash
+python -m pip install speedtest-cli
+speedtest-cli --json
+```
+
+The edge module checks for `speedtest` first, then `speedtest-cli`.
+
+### Enable the Module
+
+Enable it from the device detail page in the web UI:
+
+1. Open `Devices`.
+2. Select the target device.
+3. In `Modules`, enable `speedtest`.
+4. Configure `intervalSeconds` and optionally `serverId`.
+
+You can also enable it through the API:
+
+```bash
+curl -X PATCH "$API_BASE_URL/devices/$DEVICE_UID/modules/speedtest" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled":true,"config":{"intervalSeconds":3600,"serverId":""}}'
+```
+
+The API sends module config to the edge agent in heartbeat acknowledgements. The agent keeps `lastRunAt` in memory and includes a speedtest result in the next heartbeat when the interval is due.
+
+### Expected Result Format
+
+```json
+{
+  "download_mbps": 95.4,
+  "upload_mbps": 23.1,
+  "ping_ms": 12.4,
+  "jitter_ms": 1.2,
+  "packet_loss_percent": null,
+  "server_name": "Example ISP",
+  "server_id": "12345",
+  "server_location": "City, Country",
+  "isp": "Customer ISP",
+  "timestamp": "2026-05-03T12:00:00+00:00",
+  "backend": "ookla"
+}
+```
+
+If the binary is missing or the test fails, the module returns:
+
+```json
+{
+  "error": "No speedtest binary found. Install official Ookla speedtest or 'pip install speedtest-cli'.",
+  "timestamp": "2026-05-03T12:00:00+00:00"
 }
 ```
 

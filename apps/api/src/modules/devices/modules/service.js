@@ -44,6 +44,17 @@ export async function getDeviceModules(deviceId) {
   });
 }
 
+export async function getEdgeModuleConfigs(deviceId) {
+  const modules = await getDeviceModules(deviceId);
+  return modules.reduce((configs, mod) => {
+    configs[mod.name] = {
+      enabled: mod.enabled,
+      config: mod.config || {}
+    };
+    return configs;
+  }, {});
+}
+
 export async function updateDeviceModule({ deviceId, moduleName, enabled, config }) {
   const registryItem = MODULE_REGISTRY.find((m) => m.name === moduleName);
   if (!registryItem) {

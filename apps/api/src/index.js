@@ -11,6 +11,7 @@ import {
   isDeviceTokenActive
 } from "./modules/heartbeats/service.js";
 import {
+  getEdgeModuleConfigs,
   popPendingCommands,
   updateModuleLastResult
 } from "./modules/devices/modules/service.js";
@@ -36,7 +37,8 @@ wss.on("connection", async (socket, req) => {
       type: "ack",
       message: "connected",
       deviceUid: device.deviceUid,
-      config: device.metadata?.monitoring || { services: [] }
+      config: device.metadata?.monitoring || { services: [] },
+      modules: await getEdgeModuleConfigs(device.id)
     })
   );
 
@@ -79,6 +81,7 @@ wss.on("connection", async (socket, req) => {
           at: result.at,
           status: result.status,
           config: device.metadata?.monitoring || { services: [] },
+          modules: await getEdgeModuleConfigs(device.id),
           commands: commands.length > 0 ? commands : undefined
         })
       );
