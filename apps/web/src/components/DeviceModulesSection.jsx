@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Activity, Settings, ToggleLeft, ToggleRight } from "lucide-react";
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, Separator } from "./ui.jsx";
+import { useNavigate } from "react-router-dom";
+import { Activity, BarChart3, Settings, ToggleLeft, ToggleRight } from "lucide-react";
+import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from "./ui.jsx";
 import { apiFetch } from "../lib/api.js";
 
 function ConfigField({ name, schema, value, onChange }) {
@@ -11,7 +12,7 @@ function ConfigField({ name, schema, value, onChange }) {
   if (type === "number") {
     return (
       <div className="space-y-2">
-        <Label htmlFor={name} className="text-sm font-medium">{name}</Label>
+        <label htmlFor={name} className="text-sm font-medium">{name}</label>
         {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
         <Input
           id={name}
@@ -29,7 +30,7 @@ function ConfigField({ name, schema, value, onChange }) {
   if (type === "string") {
     return (
       <div className="space-y-2">
-        <Label htmlFor={name} className="text-sm font-medium">{name}</Label>
+        <label htmlFor={name} className="text-sm font-medium">{name}</label>
         {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}
         <Input
           id={name}
@@ -63,43 +64,115 @@ function ConfigField({ name, schema, value, onChange }) {
   return null;
 }
 
+function metricValue(result, ...keys) {
+  for (const key of keys) {
+    const value = result?.[key];
+    if (value !== undefined && value !== null && value !== "") return Number(value);
+  }
+  return null;
+}
+
+function formatMetric(value, unit) {
+  return Number.isFinite(value) ? `${value.toFixed(value >= 100 ? 0 : 1)} ${unit}` : "No data";
+}
+
+function hasSpeedtestResult(mod) {
+  const result = mod.lastResult || {};
+  return (
+    mod.name === "speedtest" &&
+    !result.error &&
+    Object.keys(result).length > 0 &&
+    (metricValue(result, "downloadMbps", "download_mbps", "download") !== null ||
+      metricValue(result, "uploadMbps", "upload_mbps", "upload") !== null ||
+      metricValue(result, "pingMs", "ping_ms", "ping") !== null)
+  );
+}
+
+function SpeedtestSummaryCard({ mod, deviceUid }) {
+  const navigate = useNavigate();
+  const result = mod.lastResult || {};
+  const download = metricValue(result, "downloadMbps", "download_mbps", "download");
+  const upload = metricValue(result, "uploadMbps", "upload_mbps", "upload");
+  const ping = metricValue(result, "pingMs", "ping_ms", "ping");
+
+  return (
+    <div className="mt-4 rounded-2xl border bg-muted/30 p-4">
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-sm font-medium">Latest speedtest</div>
+          <div className="text-xs text-muted-foreground">
+            {mod.lastRunAt ? new Date(mod.lastRunAt).toLocaleString() : "Most recent module result"}
+          </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => navigate(`/devices/${deviceUid}/speedtest`)}>
+          <BarChart3 className="mr-2 h-4 w-4" />
+          View History
+        </Button>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl bg-background p-3">
+          <div className="text-xs text-muted-foreground">Download</div>
+          <div className="text-lg font-semibold">{formatMetric(download, "Mbps")}</div>
+        </div>
+        <div className="rounded-xl bg-background p-3">
+          <div className="text-xs text-muted-foreground">Upload</div>
+          <div className="text-lg font-semibold">{formatMetric(upload, "Mbps")}</div>
+        </div>
+        <div className="rounded-xl bg-background p-3">
+          <div className="text-xs text-muted-foreground">Ping</div>
+          <div className="text-lg font-semibold">{formatMetric(ping, "ms")}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DeviceModulesSection({ deviceId, deviceUid, isAdmin }) {
   const queryClient = useQueryClient();
   const [configOpen, setConfigOpen] = useState(null);
   const [draftConfig, setDraftConfig] = useState({});
+  const moduleDeviceKey = deviceUid || deviceId;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["device-modules", deviceId],
-    queryFn: () => apiFetch(`/devices/${deviceId}/modules`),
+    queryKey: ["device-modules", moduleDeviceKey],
+    enabled: Boolean(moduleDeviceKey),
+    queryFn: () => apiFetch(`/devices/${moduleDeviceKey}/modules`),
   });
 
   const toggleMutation = useMutation({
     mutationFn: ({ name, enabled }) =>
-      apiFetch(`/devices/${deviceId}/modules/${name}`, {
+      apiFetch(`/devices/${moduleDeviceKey}/modules/${name}`, {
         method: "PATCH",
         body: JSON.stringify({ enabled }),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["device-modules", deviceId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["device-modules", moduleDeviceKey] }),
   });
 
   const configMutation = useMutation({
     mutationFn: ({ name, config }) =>
-      apiFetch(`/devices/${deviceId}/modules/${name}`, {
+      apiFetch(`/devices/${moduleDeviceKey}/modules/${name}`, {
         method: "PATCH",
         body: JSON.stringify({ config }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["device-modules", deviceId] });
+      queryClient.invalidateQueries({ queryKey: ["device-modules", moduleDeviceKey] });
       setConfigOpen(null);
     },
   });
 
   const runMutation = useMutation({
     mutationFn: (name) =>
-      apiFetch(`/devices/${deviceId}/modules/${name}/run`, {
+      apiFetch(`/devices/${moduleDeviceKey}/modules/${name}/run`, {
         method: "POST",
         body: JSON.stringify({ action: "run" }),
       }),
+    onSuccess: (_data, name) => {
+      queryClient.invalidateQueries({ queryKey: ["device-modules", moduleDeviceKey] });
+      if (name === "speedtest") {
+        queryClient.invalidateQueries({ queryKey: ["speedtest-results", moduleDeviceKey] });
+        queryClient.invalidateQueries({ queryKey: ["speedtest-summary", moduleDeviceKey] });
+      }
+    },
   });
 
   if (isLoading) {
@@ -147,7 +220,7 @@ export default function DeviceModulesSection({ deviceId, deviceUid, isAdmin }) {
           modules.map((mod) => (
             <div
               key={mod.name}
-              className="flex items-center justify-between rounded-2xl border p-4"
+              className="flex flex-col gap-4 rounded-2xl border p-4 lg:flex-row lg:items-start lg:justify-between"
             >
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -165,8 +238,9 @@ export default function DeviceModulesSection({ deviceId, deviceUid, isAdmin }) {
                     Last run: {new Date(mod.lastRunAt).toLocaleString()}
                   </p>
                 ) : null}
+                {hasSpeedtestResult(mod) ? <SpeedtestSummaryCard mod={mod} deviceUid={moduleDeviceKey} /> : null}
               </div>
-              <div className="ml-4 flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2 lg:ml-4 lg:justify-end">
                 {isAdmin ? (
                   <>
                     <Button

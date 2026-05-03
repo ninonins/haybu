@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate, useParams } from "react-router-dom";
-import { AlertTriangle, Cpu, HardDrive, LaptopMinimal, PlugZap, Trash2, Unplug, Workflow } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { AlertTriangle, BarChart3, Cpu, HardDrive, LaptopMinimal, PlugZap, Trash2, Unplug, Workflow } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -51,6 +51,12 @@ export default function DeviceDetailPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["device", id],
     queryFn: () => apiFetch(`/devices/${id}`)
+  });
+  const detailDeviceUid = data?.device?.deviceUid;
+  const { data: moduleData } = useQuery({
+    queryKey: ["device-modules", detailDeviceUid],
+    enabled: Boolean(detailDeviceUid),
+    queryFn: () => apiFetch(`/devices/${detailDeviceUid}/modules`)
   });
 
   const unpairMutation = useMutation({
@@ -123,6 +129,8 @@ export default function DeviceDetailPage() {
   if (error) return <ErrorState description={error.message} />;
 
   const device = data.device;
+  const speedtestModule = (moduleData?.modules || []).find((mod) => mod.name === "speedtest");
+  const showSpeedtestLink = Boolean(speedtestModule?.enabled);
 
   function setGroupEnabled(groupName, enabled) {
     setGroupSettings((current) => ({ ...current, [groupName]: { ...(current[groupName] || { selected: {} }), enabled } }));
@@ -202,6 +210,14 @@ export default function DeviceDetailPage() {
               <Button variant="outline" onClick={() => setConfirmUnpairOpen(true)}>
                 <Unplug className="mr-2 h-4 w-4" />
                 Unpair
+              </Button>
+            ) : null}
+            {showSpeedtestLink ? (
+              <Button asChild variant="outline">
+                <Link to={`/devices/${device.deviceUid}/speedtest`}>
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Speedtest
+                </Link>
               </Button>
             ) : null}
             {user?.role === "admin" ? (

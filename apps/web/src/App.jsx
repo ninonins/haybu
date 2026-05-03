@@ -11,6 +11,7 @@ import DevicesPage from "./pages/DevicesPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import PairDevicePage from "./pages/PairDevicePage.jsx";
 import ReportsPage from "./pages/ReportsPage.jsx";
+import SpeedtestPage from "./pages/SpeedtestPage.jsx";
 import UsersPage from "./pages/UsersPage.jsx";
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/devices" element={<DevicesPage />} />
         <Route path="/devices/:id" element={<DeviceDetailPage />} />
+        <Route path="/devices/:uid/speedtest" element={<SpeedtestPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route
           path="/pair-device"
