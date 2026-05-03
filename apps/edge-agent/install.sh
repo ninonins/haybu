@@ -2,18 +2,16 @@
 set -euo pipefail
 
 # Haybu Edge Agent Installer
-# Usage: sudo ./install.sh [DEVICE_NAME] [API_BASE_URL] [WS_BASE_URL]
+# Usage: sudo ./install.sh [DEVICE_NAME]
 #   DEVICE_NAME    - Display name for this device (default: hostname)
-#   API_BASE_URL   - API URL (default: https://api-haybu.mr.jandayan.net)
-#   WS_BASE_URL    - WebSocket URL (default: wss://api-haybu.mr.jandayan.net/ws/devices)
-#   INSTALL_DIR    - Override install directory (default: /opt/haybu-edge-agent)
-#   USER           - Run as user (default: haybu)
+#
+# Configure API/WS URLs by editing /opt/haybu-edge-agent/.env after install.
 
 DEVICE_NAME="${1:-$(hostname)}"
-API_BASE_URL="${2:-https://api-haybu.mr.jandayan.net}"
-WS_BASE_URL="${3:-wss://api-haybu.mr.jandayan.net/ws/devices}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/haybu-edge-agent}"
-RUN_USER="${USER:-haybu}"
+RUN_USER="${RUN_USER:-haybu}"
+API_BASE_URL="${API_BASE_URL:-https://api-haybu.mr.jandayan.net}"
+WS_BASE_URL="${WS_BASE_URL:-wss://api-haybu.mr.jandayan.net/ws/devices}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -39,15 +37,19 @@ else
     echo "User $RUN_USER already exists"
 fi
 
-# --- Install Python deps ---
-echo "Installing Python dependencies..."
-python3 -m pip install --upgrade pip > /dev/null 2>&1 || true
-python3 -m pip install -r "$SCRIPT_DIR/requirements.txt" > /dev/null 2>&1
+# --- Install Python deps into venv ---
+echo "Setting up Python virtual environment..."
+if ! python3 --version &> /dev/null; then
+    echo "ERROR: python3 not found. Install it first."
+    exit 1
+fi
+python3 -m venv "$INSTALL_DIR/venv"
+"$INSTALL_DIR/venv/bin/pip" install --upgrade pip
+"$INSTALL_DIR/venv/bin/pip" install -r "$SCRIPT_DIR/requirements.txt"
 
 # --- Install app ---
 echo "Installing edge agent to $INSTALL_DIR..."
-rm -rf "$INSTALL_DIR"
-mkdir -p "$INSTALL_DIR"
+rm -rf "$INSTALL_DIR/edge_agent"
 cp -r "$SCRIPT_DIR/edge_agent" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/requirements.txt" "$INSTALL_DIR/"
 
@@ -82,7 +84,7 @@ Group=$RUN_USER
 WorkingDirectory=$INSTALL_DIR
 EnvironmentFile=$INSTALL_DIR/.env
 Environment=PYTHONPATH=$INSTALL_DIR
-ExecStart=/usr/bin/python3 -m edge_agent.cli
+ExecStart=$INSTALL_DIR/venv/bin/python -m edge_agent.cli
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -99,11 +101,6 @@ RestrictRealtime=true
 [Install]
 WantedBy=multi-user.target
 EOF
-
-# --- Create symlink so python can find edge_agent module ---
-PYTHON_SITE=$(python3 -m site --user-site 2>/dev/null || python3 -c "import site; print(site.getsitepackages()[0])")
-rm -f "$PYTHON_SITE/edge_agent"
-ln -s "$INSTALL_DIR/edge_agent" "$PYTHON_SITE/edge_agent"
 
 # --- Reload and enable ---
 systemctl daemon-reload
