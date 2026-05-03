@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 
 import websocket
 
-from .api import create_pairing_session, inventory_changed, poll_pairing_status
+from .api import create_pairing_session, inventory_changed, poll_credential, poll_pairing_status
 from .config import load_config
 from .modules import ModuleManager
 from .payload import build_compact_heartbeat_payload, build_system_inventory
@@ -40,8 +40,14 @@ def ensure_credential(config, state: dict) -> None:
             raise RuntimeError("Pairing expired before completion")
         time.sleep(3)
 
-    print("Paste the device credential returned by the portal:")
-    state["credential"] = input("> ").strip()
+    result = None
+    while not result:
+        result = poll_credential(config.api_base_url, pairing["code"])
+        if not result:
+            time.sleep(2)
+
+    state["credential"] = result["credential"]
+    print("Credential received automatically.")
     save_state(config.state_dir, state)
 
 

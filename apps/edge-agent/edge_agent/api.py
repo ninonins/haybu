@@ -26,5 +26,17 @@ def poll_pairing_status(base_url: str, code: str) -> dict:
     return response.json()["pairing"]
 
 
+def poll_credential(base_url: str, code: str) -> dict | None:
+    response = requests.post(
+        f"{base_url}/pairing/poll-credential",
+        json={"code": code},
+        timeout=5
+    )
+    if response.status_code == 202:
+        return None
+    response.raise_for_status()
+    return response.json()
+
+
 def inventory_changed(previous: dict | None, current: dict | None) -> bool:
     return previous != current

@@ -79,6 +79,7 @@ export async function completePairing({ code, adminUserId }) {
   pairing.consumedAt = new Date();
   pairing.status = "paired";
   pairing.deviceId = device.id;
+  pairing.rawCredential = rawCredential;
   await pairing.save();
 
   audit("pairing.complete", { code, deviceUid: device.deviceUid, adminUserId });
@@ -92,6 +93,26 @@ export async function getPairingStatus(code) {
     return null;
   }
   return pairing;
+}
+
+export async function pollCredential(code) {
+  const pairing = await DevicePairing.findOne({
+    where: {
+      pairingCode: code,
+      status: "paired",
+      rawCredential: { [Op.ne]: null }
+    }
+  });
+
+  if (!pairing) {
+    return null;
+  }
+
+  const credential = pairing.rawCredential;
+  pairing.rawCredential = null;
+  await pairing.save();
+
+  return { credential };
 }
 
 export async function unpairDevice({ deviceId, adminUserId }) {

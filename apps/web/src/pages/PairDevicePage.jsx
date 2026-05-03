@@ -42,8 +42,8 @@ export default function PairDevicePage() {
             <Alert variant="success">
               <AlertTitle>Device paired</AlertTitle>
               <AlertDescription>
-                Credential for <strong>{mutation.data.device.displayName}</strong>:
-                <pre className="mt-3 rounded-xl border bg-muted p-3 text-xs">{mutation.data.credential}</pre>
+                <strong>{mutation.data.device.displayName}</strong> has been paired successfully.
+                The device will automatically receive its credential and begin sending heartbeats.
               </AlertDescription>
             </Alert>
           ) : null}

@@ -55,7 +55,8 @@ export const DevicePairing = sequelize.define(
     expiresAt: { type: DataTypes.DATE, allowNull: false },
     consumedAt: { type: DataTypes.DATE, allowNull: true },
     status: { type: DataTypes.ENUM("pending", "paired", "expired"), allowNull: false, defaultValue: "pending" },
-    requestedMeta: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} }
+    requestedMeta: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+    rawCredential: { type: DataTypes.STRING, allowNull: true }
   },
   { tableName: "device_pairings", underscored: true }
 );

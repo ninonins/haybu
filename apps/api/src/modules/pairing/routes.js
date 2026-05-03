@@ -2,7 +2,7 @@ import express from "express";
 import rateLimit from "express-rate-limit";
 import { z } from "zod";
 import { requireAuth, requireRole } from "../../middleware/auth.js";
-import { completePairing, createPairingSession, getPairingStatus, unpairDevice } from "./service.js";
+import { completePairing, createPairingSession, getPairingStatus, pollCredential, unpairDevice } from "./service.js";
 
 const router = express.Router();
 const pairingLimiter = rateLimit({ windowMs: 60_000, limit: 20 });
@@ -65,6 +65,22 @@ router.get("/status/:code", async (req, res) => {
       deviceUid: pairing.deviceUid
     }
   });
+});
+
+router.post("/poll-credential", pairingLimiter, async (req, res, next) => {
+  try {
+    const code = String(req.body.code || "").trim().toUpperCase();
+    if (!code) {
+      return res.status(400).json({ error: "code is required" });
+    }
+    const result = await pollCredential(code);
+    if (!result) {
+      return res.status(202).json({ status: "pending", message: "Pairing not yet completed" });
+    }
+    res.json({ status: "ready", credential: result.credential });
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.post("/devices/:deviceId/unpair", requireAuth, requireRole("admin"), async (req, res, next) => {
