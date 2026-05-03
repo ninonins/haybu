@@ -22,13 +22,24 @@ def init(config: dict | None = None) -> None:
     _config = config or {}
 
 
-def _find_speedtest_binary() -> str | None:
-    """Find an available speedtest binary."""
+def _find_speedtest_binary() -> tuple[str | None, str | None]:
+    """Find an available speedtest binary and detect its type."""
     for binary in ["speedtest", "speedtest-cli"]:
         path = shutil.which(binary)
         if path:
-            return path
-    return None
+            # Detect if it's Ookla or speedtest-cli by checking --help
+            try:
+                result = subprocess.run([path, "--help"], capture_output=True, text=True, timeout=5)
+                help_text = result.stdout + result.stderr
+                if "--format" in help_text:
+                    return path, "ookla"
+                if "--json" in help_text:
+                    return path, "speedtest-cli"
+            except Exception:
+                pass
+            # Fallback: assume ookla if named exactly 'speedtest', else speedtest-cli
+            return path, "ookla" if binary == "speedtest" else "speedtest-cli"
+    return None, None
 
 
 def _run_ookla_speedtest(binary: str, server_id: str | None = None) -> dict:
@@ -113,7 +124,7 @@ def _run_speedtest_cli_package(binary: str, server_id: str | None = None) -> dic
 
 def run() -> dict:
     """Run a speedtest and return structured results."""
-    binary = _find_speedtest_binary()
+    binary, backend = _find_speedtest_binary()
     if not binary:
         return {
             "error": "No speedtest binary found. Install official Ookla speedtest (https://www.speedtest.net/apps/cli) or run: pip install speedtest-cli",
@@ -123,8 +134,7 @@ def run() -> dict:
     server_id = _config.get("serverId") or None
 
     try:
-        binary_name = binary.split("/")[-1]
-        if binary_name == "speedtest":
+        if backend == "ookla":
             return _run_ookla_speedtest(binary, server_id)
         return _run_speedtest_cli_package(binary, server_id)
     except Exception as exc:
