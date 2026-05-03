@@ -26,19 +26,28 @@ def _find_speedtest_binary() -> tuple[str | None, str | None]:
     """Find an available speedtest binary and detect its type."""
     for binary in ["speedtest", "speedtest-cli"]:
         path = shutil.which(binary)
-        if path:
-            # Detect if it's Ookla or speedtest-cli by checking --help
-            try:
-                result = subprocess.run([path, "--help"], capture_output=True, text=True, timeout=5)
-                help_text = result.stdout + result.stderr
-                if "--format" in help_text:
-                    return path, "ookla"
-                if "--json" in help_text:
-                    return path, "speedtest-cli"
-            except Exception:
-                pass
-            # Fallback: assume ookla if named exactly 'speedtest', else speedtest-cli
-            return path, "ookla" if binary == "speedtest" else "speedtest-cli"
+        if not path:
+            continue
+        # Detect by --version (Ookla prints its name)
+        try:
+            result = subprocess.run([path, "--version"], capture_output=True, text=True, timeout=5)
+            version_text = result.stdout + result.stderr
+            if "Ookla" in version_text or "Speedtest by Ookla" in version_text:
+                return path, "ookla"
+        except Exception:
+            pass
+        # Detect by --help flags
+        try:
+            result = subprocess.run([path, "--help"], capture_output=True, text=True, timeout=5)
+            help_text = result.stdout + result.stderr
+            if "--format" in help_text:
+                return path, "ookla"
+            if "--json" in help_text:
+                return path, "speedtest-cli"
+        except Exception:
+            pass
+        # Fallback by name
+        return path, "ookla" if binary == "speedtest" else "speedtest-cli"
     return None, None
 
 

@@ -53,6 +53,69 @@ rm -rf "$INSTALL_DIR/edge_agent"
 cp -r "$SCRIPT_DIR/edge_agent" "$INSTALL_DIR/"
 cp "$SCRIPT_DIR/requirements.txt" "$INSTALL_DIR/"
 
+# --- Module Onboarding ---
+MODULES_DIR="$INSTALL_DIR/edge_agent/modules"
+AVAILABLE_MODULES=()
+for dir in "$MODULES_DIR"/*/; do
+    [ -d "$dir" ] || continue
+    name=$(basename "$dir")
+    [ "$name" = "__pycache__" ] && continue
+    AVAILABLE_MODULES+=("$name")
+done
+
+echo ""
+echo "=== Available Modules ==="
+SELECTED_MODULES=()
+for mod in "${AVAILABLE_MODULES[@]}"; do
+    manifest="$MODULES_DIR/$mod/manifest.json"
+    desc=""
+    if [ -f "$manifest" ]; then
+        desc=$(python3 -c "import json,sys; print(json.load(open('$manifest')).get('description',''))" 2>/dev/null || true)
+    fi
+    printf "  %-15s %s\n" "[$mod]" "$desc"
+done
+
+echo ""
+for mod in "${AVAILABLE_MODULES[@]}"; do
+    read -p "Enable module '$mod'? [y/N]: " ans
+    if [[ "$ans" =~ ^[Yy]$ ]]; then
+        SELECTED_MODULES+=("$mod")
+    fi
+done
+
+# Pre-install module dependencies
+if [ ${#SELECTED_MODULES[@]} -gt 0 ]; then
+    echo ""
+    echo "=== Installing module dependencies ==="
+    for mod in "${SELECTED_MODULES[@]}"; do
+        manifest="$MODULES_DIR/$mod/manifest.json"
+        if [ -f "$manifest" ]; then
+            install_script=$(python3 -c "
+import json,sys
+try:
+    d=json.load(open('$manifest'))
+    print(d.get('install',{}).get('script',''))
+except: pass
+" 2>/dev/null || true)
+            install_desc=$(python3 -c "
+import json,sys
+try:
+    d=json.load(open('$manifest'))
+    print(d.get('install',{}).get('description','Installing...'))
+except: pass
+" 2>/dev/null || true)
+            if [ -n "$install_script" ]; then
+                echo "[$mod] $install_desc"
+                if bash -c "$install_script"; then
+                    echo "[$mod] ✓ Installed successfully"
+                else
+                    echo "[$mod] ✗ Install failed (will retry at runtime)"
+                fi
+            fi
+        fi
+    done
+fi
+
 # --- Create .env ---
 echo "Creating environment config..."
 cat > "$INSTALL_DIR/.env" << EOF
@@ -63,6 +126,11 @@ HEARTBEAT_INTERVAL_SECONDS=30
 STATE_DIR=/var/lib/haybu-edge-agent
 SERVICES_JSON=[]
 EOF
+
+if [ ${#SELECTED_MODULES[@]} -gt 0 ]; then
+    MODULES_JSON=$(printf '%s\n' "${SELECTED_MODULES[@]}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip().splitlines()))')
+    echo "MODULES_ENABLED=$MODULES_JSON" >> "$INSTALL_DIR/.env"
+fi
 
 # --- Create state directory ---
 mkdir -p /var/lib/haybu-edge-agent
@@ -84,6 +152,7 @@ Group=$RUN_USER
 WorkingDirectory=$INSTALL_DIR
 EnvironmentFile=$INSTALL_DIR/.env
 Environment=PYTHONPATH=$INSTALL_DIR
+Environment=PYTHONUNBUFFERED=1
 ExecStart=$INSTALL_DIR/venv/bin/python -m edge_agent.cli --config $INSTALL_DIR/.env
 Restart=always
 RestartSec=10
@@ -108,6 +177,8 @@ systemctl enable haybu-edge-agent.service
 
 echo ""
 echo "=== Installation complete ==="
+echo "Selected modules: ${SELECTED_MODULES[@]:-(none)}"
+echo ""
 echo "Start:   sudo systemctl start haybu-edge-agent"
 echo "Status:  sudo systemctl status haybu-edge-agent"
 echo "Logs:    sudo journalctl -u haybu-edge-agent -f"
