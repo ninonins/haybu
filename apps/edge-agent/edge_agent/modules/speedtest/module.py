@@ -110,7 +110,7 @@ def run() -> dict:
     binary = _find_speedtest_binary()
     if not binary:
         return {
-            "error": "No speedtest binary found. Install official Ookla speedtest or 'pip install speedtest-cli'.",
+            "error": "No speedtest binary found. Install official Ookla speedtest (https://www.speedtest.net/apps/cli) or run: pip install speedtest-cli",
             "timestamp": datetime.now(UTC).isoformat(),
         }
 
