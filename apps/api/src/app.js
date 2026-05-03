@@ -35,7 +35,7 @@ export function createApp() {
   app.use("/auth", authRoutes);
   app.use("/admin", adminRoutes);
   app.use("/users", userRoutes);
-  app.use("/devices/modules", deviceModuleRoutes);
+  app.use("/devices", deviceModuleRoutes);
   app.use("/devices", deviceRoutes);
   app.use("/pairing", pairingRoutes);
   app.use("/reports", reportRoutes);
