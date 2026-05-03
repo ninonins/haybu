@@ -144,6 +144,36 @@ export const DeviceModule = sequelize.define(
   { tableName: "device_modules", underscored: true }
 );
 
+export const SpeedtestResult = sequelize.define(
+  "SpeedtestResult",
+  {
+    id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    deviceId: { type: DataTypes.UUID, allowNull: false, references: { model: "devices", key: "id" } },
+    deviceUid: { type: DataTypes.STRING, allowNull: false },
+    downloadMbps: { type: DataTypes.FLOAT, allowNull: true },
+    uploadMbps: { type: DataTypes.FLOAT, allowNull: true },
+    pingMs: { type: DataTypes.FLOAT, allowNull: true },
+    jitterMs: { type: DataTypes.FLOAT, allowNull: true },
+    packetLossPercent: { type: DataTypes.FLOAT, allowNull: true },
+    serverName: { type: DataTypes.STRING, allowNull: true },
+    serverId: { type: DataTypes.STRING, allowNull: true },
+    serverLocation: { type: DataTypes.STRING, allowNull: true },
+    isp: { type: DataTypes.STRING, allowNull: true },
+    backend: { type: DataTypes.ENUM("ookla", "speedtest-cli"), allowNull: false },
+    error: { type: DataTypes.TEXT, allowNull: true },
+    testedAt: { type: DataTypes.DATE, allowNull: false }
+  },
+  {
+    tableName: "speedtest_results",
+    underscored: true,
+    indexes: [
+      { fields: ["device_uid"] },
+      { fields: ["device_uid", "tested_at"] },
+      { fields: ["device_id"] }
+    ]
+  }
+);
+
 User.hasMany(RefreshToken, { foreignKey: "userId" });
 RefreshToken.belongsTo(User, { foreignKey: "userId" });
 
@@ -167,6 +197,9 @@ DevicePairing.belongsTo(Device, { foreignKey: "deviceId" });
 
 Device.hasMany(DeviceModule, { foreignKey: "deviceId" });
 DeviceModule.belongsTo(Device, { foreignKey: "deviceId" });
+
+Device.hasMany(SpeedtestResult, { foreignKey: "deviceId" });
+SpeedtestResult.belongsTo(Device, { foreignKey: "deviceId" });
 
 export async function syncSchema() {
   await sequelize.sync();

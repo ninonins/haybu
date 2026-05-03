@@ -7,6 +7,7 @@ import authRoutes from "./modules/auth/routes.js";
 import adminRoutes from "./modules/admin/routes.js";
 import deviceRoutes from "./modules/devices/routes.js";
 import deviceModuleRoutes from "./modules/devices/modules/routes.js";
+import speedtestRoutes from "./modules/devices/modules/speedtest/routes.js";
 import pairingRoutes from "./modules/pairing/routes.js";
 import reportRoutes from "./modules/reports/routes.js";
 import userRoutes from "./modules/users/routes.js";
@@ -35,6 +36,7 @@ export function createApp() {
   app.use("/auth", authRoutes);
   app.use("/admin", adminRoutes);
   app.use("/users", userRoutes);
+  app.use("/", speedtestRoutes);
   app.use("/devices", deviceModuleRoutes);
   app.use("/devices", deviceRoutes);
   app.use("/pairing", pairingRoutes);

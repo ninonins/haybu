@@ -66,6 +66,7 @@ wss.on("connection", async (socket, req) => {
         if (moduleData && moduleData.result) {
           await updateModuleLastResult({
             deviceId: device.id,
+            deviceUid: device.deviceUid,
             moduleName,
             result: moduleData.result,
           });

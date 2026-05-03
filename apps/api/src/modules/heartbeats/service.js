@@ -88,7 +88,8 @@ function compactHeartbeatPayload(payload, services, status) {
       src: service.source,
       st: service.status === "up" ? "u" : service.status === "down" ? "d" : "g",
       mm: service.monitorMode === "ignore" ? "i" : "a"
-    }))
+    })),
+    modules: payload.modules || {}
   };
 }
 

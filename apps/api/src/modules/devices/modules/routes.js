@@ -1,6 +1,6 @@
 import express from "express";
-import { Device, DeviceModule } from "../../db/models.js";
-import { requireAuth, requireRole } from "../../middleware/auth.js";
+import { Device } from "../../../db/models.js";
+import { requireAuth, requireRole } from "../../../middleware/auth.js";
 import { getModuleRegistry, getDeviceModules, updateDeviceModule, queueModuleCommand } from "./service.js";
 
 const router = express.Router();

@@ -1,4 +1,5 @@
-import { DeviceModule, Device } from "../../db/models.js";
+import { DeviceModule, Device } from "../../../db/models.js";
+import { createSpeedtestResult } from "./speedtest/service.js";
 
 const MODULE_REGISTRY = [
   {
@@ -90,11 +91,23 @@ export function hasPendingCommands(deviceUid) {
   return (pendingCommands.get(deviceUid) || []).length > 0;
 }
 
-export async function updateModuleLastResult({ deviceId, moduleName, result }) {
+export async function updateModuleLastResult({ deviceId, deviceUid, moduleName, result }) {
   const instance = await DeviceModule.findOne({ where: { deviceId, moduleName } });
   if (!instance) return null;
   instance.lastRunAt = new Date();
   instance.lastResult = result || {};
   await instance.save();
+
+  if (moduleName === "speedtest" && result && !result.error) {
+    const resolvedDeviceUid = deviceUid || (await Device.findByPk(deviceId))?.deviceUid;
+    if (resolvedDeviceUid) {
+      await createSpeedtestResult({
+        deviceId,
+        deviceUid: resolvedDeviceUid,
+        result
+      });
+    }
+  }
+
   return instance;
 }
