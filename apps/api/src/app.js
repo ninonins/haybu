@@ -6,6 +6,7 @@ import { errorHandler } from "./middleware/error.js";
 import authRoutes from "./modules/auth/routes.js";
 import adminRoutes from "./modules/admin/routes.js";
 import deviceRoutes from "./modules/devices/routes.js";
+import deviceModuleRoutes from "./modules/devices/modules/routes.js";
 import pairingRoutes from "./modules/pairing/routes.js";
 import reportRoutes from "./modules/reports/routes.js";
 import userRoutes from "./modules/users/routes.js";
@@ -34,6 +35,7 @@ export function createApp() {
   app.use("/auth", authRoutes);
   app.use("/admin", adminRoutes);
   app.use("/users", userRoutes);
+  app.use("/devices/modules", deviceModuleRoutes);
   app.use("/devices", deviceRoutes);
   app.use("/pairing", pairingRoutes);
   app.use("/reports", reportRoutes);

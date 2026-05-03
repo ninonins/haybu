@@ -1,0 +1,10 @@
+{
+  "name": "speedtest",
+  "version": "1.0.0",
+  "description": "Internet speed test using speedtest-cli",
+  "entrypoint": "module.py",
+  "config_schema": {
+    "intervalSeconds": { "type": "number", "default": 3600, "min": 300, "max": 86400, "description": "Seconds between automatic runs" },
+    "serverId": { "type": "string", "default": "", "description": "Optional server ID to pin tests" }
+  }
+}

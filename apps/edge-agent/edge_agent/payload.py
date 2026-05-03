@@ -92,8 +92,11 @@ def build_compact_heartbeat_payload(
     services: list[dict],
     discovered_services: list[dict],
     include_inventory: bool,
+    modules: dict | None = None,
 ) -> dict:
     payload = build_payload(device_uid, services, discovered_services)
     if not include_inventory:
         payload.pop("inventory", None)
+    if modules:
+        payload["modules"] = modules
     return payload

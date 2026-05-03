@@ -10,6 +10,10 @@ import {
   ingestHeartbeat,
   isDeviceTokenActive
 } from "./modules/heartbeats/service.js";
+import {
+  popPendingCommands,
+  updateModuleLastResult
+} from "./modules/devices/modules/service.js";
 import { startScheduler } from "./scheduler/jobs.js";
 
 const app = createApp();
@@ -55,12 +59,26 @@ wss.on("connection", async (socket, req) => {
         req.socket.remoteAddress || ""
       );
       await device.reload();
+      const commands = popPendingCommands(device.deviceUid);
+
+      const moduleResults = message.payload?.modules || {};
+      for (const [moduleName, moduleData] of Object.entries(moduleResults)) {
+        if (moduleData && moduleData.result) {
+          await updateModuleLastResult({
+            deviceId: device.id,
+            moduleName,
+            result: moduleData.result,
+          });
+        }
+      }
+
       socket.send(
         JSON.stringify({
           type: "ack",
           at: result.at,
           status: result.status,
-          config: device.metadata?.monitoring || { services: [] }
+          config: device.metadata?.monitoring || { services: [] },
+          commands: commands.length > 0 ? commands : undefined
         })
       );
     } catch (error) {
@@ -74,6 +92,6 @@ await syncSchema();
 await bootstrapAdmin();
 startScheduler();
 
-server.listen(env.port, () => {
-  console.log(`API listening on ${env.port}`);
+server.listen(env.port, env.host, () => {
+  console.log(`API listening on ${env.host}:${env.port}`);
 });

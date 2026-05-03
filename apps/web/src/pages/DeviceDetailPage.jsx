@@ -30,6 +30,7 @@ import {
 import { apiFetch } from "../lib/api.js";
 import { useAuthStore } from "../store/auth.js";
 import { ErrorState, LoadingState, MetricCard, PageHeader } from "./shared.jsx";
+import DeviceModulesSection from "../components/DeviceModulesSection.jsx";
 
 function statusVariant(status) {
   if (status === "online" || status === "up" || status === "paired") return "success";
@@ -226,6 +227,8 @@ export default function DeviceDetailPage() {
           <AlertDescription>The credential was revoked and the agent must pair again to report.</AlertDescription>
         </Alert>
       ) : null}
+
+      <DeviceModulesSection deviceId={id} deviceUid={device.deviceUid} isAdmin={user?.role === "admin"} />
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <Card className="rounded-3xl">

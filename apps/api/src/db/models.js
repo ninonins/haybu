@@ -131,6 +131,19 @@ export const SystemSetting = sequelize.define(
   { tableName: "system_settings", underscored: true }
 );
 
+export const DeviceModule = sequelize.define(
+  "DeviceModule",
+  {
+    id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
+    moduleName: { type: DataTypes.STRING, allowNull: false },
+    enabled: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    config: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} },
+    lastRunAt: { type: DataTypes.DATE, allowNull: true },
+    lastResult: { type: DataTypes.JSONB, allowNull: false, defaultValue: {} }
+  },
+  { tableName: "device_modules", underscored: true }
+);
+
 User.hasMany(RefreshToken, { foreignKey: "userId" });
 RefreshToken.belongsTo(User, { foreignKey: "userId" });
 
@@ -151,6 +164,9 @@ ServiceStatusEvent.belongsTo(Device, { foreignKey: "deviceId" });
 
 Device.hasMany(DevicePairing, { foreignKey: "deviceId" });
 DevicePairing.belongsTo(Device, { foreignKey: "deviceId" });
+
+Device.hasMany(DeviceModule, { foreignKey: "deviceId" });
+DeviceModule.belongsTo(Device, { foreignKey: "deviceId" });
 
 export async function syncSchema() {
   await sequelize.sync();

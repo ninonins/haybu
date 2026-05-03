@@ -9,9 +9,12 @@ import websocket
 
 from .api import create_pairing_session, inventory_changed, poll_pairing_status
 from .config import load_config
+from .modules import ModuleManager
 from .payload import build_compact_heartbeat_payload, build_system_inventory
 from .services import discover_runtime_services, evaluate_services
 from .state import clear_credential, load_state, save_state
+
+module_manager = ModuleManager()
 
 
 def ensure_credential(config, state: dict) -> None:
@@ -46,6 +49,8 @@ def heartbeat_loop(config, state: dict) -> bool:
     query = urlencode({"token": state["credential"]})
     ws_url = f"{config.ws_base_url}?{query}"
     monitor_config = state.get("monitoring", {"services": []})
+    module_configs = state.get("modules", {})
+    module_manager.load_all(module_configs)
 
     while True:
         try:
@@ -77,11 +82,16 @@ def heartbeat_loop(config, state: dict) -> bool:
                 services = evaluate_services(configured_services)
                 current_inventory = build_system_inventory()
                 include_inventory = inventory_changed(state.get("last_inventory"), current_inventory)
+
+                # Run all enabled modules and attach results
+                module_results = module_manager.run_all()
+
                 payload = build_compact_heartbeat_payload(
                     state["device_uid"],
                     services,
                     discovered_services,
                     include_inventory=include_inventory,
+                    modules=module_results,
                 )
                 if include_inventory:
                     state["last_inventory"] = current_inventory
@@ -98,6 +108,19 @@ def heartbeat_loop(config, state: dict) -> bool:
                         state["monitoring"] = parsed["config"]
                         save_state(config.state_dir, state)
                         monitor_config = parsed["config"]
+                    if parsed.get("commands") is not None:
+                        for cmd in parsed["commands"]:
+                            result = module_manager.dispatch_command(cmd)
+                            print(f"Module command {cmd}: {result}")
+                    if parsed.get("modules") is not None:
+                        module_configs = parsed["modules"]
+                        state["modules"] = module_configs
+                        save_state(config.state_dir, state)
+                        for name, cfg in module_configs.items():
+                            if cfg.get("enabled"):
+                                module_manager.enable(name, cfg.get("config", {}))
+                            else:
+                                module_manager.disable(name)
                 except json.JSONDecodeError:
                     pass
                 time.sleep(config.heartbeat_interval_seconds)
