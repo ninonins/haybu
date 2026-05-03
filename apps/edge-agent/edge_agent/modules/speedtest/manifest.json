@@ -5,7 +5,7 @@
   "entrypoint": "module.py",
   "install": {
     "description": "Install official Ookla speedtest binary",
-    "script": "curl -s https://install.speedtest.net/app/cli/install.deb.sh | bash && apt install -y speedtest",
+    "script": "if command -v apt &>/dev/null; then curl -sL 'https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-$(uname -m).tgz' | tar xzf - -C /usr/local/bin && chmod +x /usr/local/bin/speedtest; else echo 'apt not available, install manually'; fi",
     "check": "which speedtest || which speedtest-cli"
   },
   "config_schema": {
