@@ -1,12 +1,55 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { Activity, BarChart3, Settings, ToggleLeft, ToggleRight } from "lucide-react";
-import { Badge, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input } from "./ui.jsx";
-import { apiFetch } from "../lib/api.js";
+import {
+  useState
+} from "react";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient
+} from "@tanstack/react-query";
+import {
+  useNavigate
+} from "react-router-dom";
+import {
+  Activity,
+  BarChart3,
+  Download,
+  Settings,
+  ToggleLeft,
+  ToggleRight
+} from "lucide-react";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input
+} from "./ui.jsx";
+import {
+  apiFetch
+} from "../lib/api.js";
 
-function ConfigField({ name, schema, value, onChange }) {
-  const { type, default: defaultValue, min, max, description } = schema;
+function ConfigField({
+  name,
+  schema,
+  value,
+  onChange
+}) {
+  const {
+    type,
+    default: defaultValue,
+    min,
+    max,
+    description
+  } = schema;
   const current = value !== undefined ? value : defaultValue;
 
   if (type === "number") {
@@ -88,7 +131,10 @@ function hasSpeedtestResult(mod) {
   );
 }
 
-function SpeedtestSummaryCard({ mod, deviceUid }) {
+function SpeedtestSummaryCard({
+  mod,
+  deviceUid
+}) {
   const navigate = useNavigate();
   const result = mod.lastResult || {};
   const download = metricValue(result, "downloadMbps", "download_mbps", "download");
@@ -127,35 +173,56 @@ function SpeedtestSummaryCard({ mod, deviceUid }) {
   );
 }
 
-export default function DeviceModulesSection({ deviceId, deviceUid, isAdmin }) {
+export default function DeviceModulesSection({
+  deviceId,
+  deviceUid,
+  isAdmin
+}) {
   const queryClient = useQueryClient();
   const [configOpen, setConfigOpen] = useState(null);
   const [draftConfig, setDraftConfig] = useState({});
   const moduleDeviceKey = deviceUid || deviceId;
 
-  const { data, isLoading } = useQuery({
+  const {
+    data,
+    isLoading
+  } = useQuery({
     queryKey: ["device-modules", moduleDeviceKey],
     enabled: Boolean(moduleDeviceKey),
     queryFn: () => apiFetch(`/devices/${moduleDeviceKey}/modules`),
   });
 
   const toggleMutation = useMutation({
-    mutationFn: ({ name, enabled }) =>
+    mutationFn: ({
+      name,
+      enabled
+    }) =>
       apiFetch(`/devices/${moduleDeviceKey}/modules/${name}`, {
         method: "PATCH",
-        body: JSON.stringify({ enabled }),
+        body: JSON.stringify({
+          enabled
+        }),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["device-modules", moduleDeviceKey] }),
+    onSuccess: () => queryClient.invalidateQueries({
+      queryKey: ["device-modules", moduleDeviceKey]
+    }),
   });
 
   const configMutation = useMutation({
-    mutationFn: ({ name, config }) =>
+    mutationFn: ({
+      name,
+      config
+    }) =>
       apiFetch(`/devices/${moduleDeviceKey}/modules/${name}`, {
         method: "PATCH",
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({
+          config
+        }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["device-modules", moduleDeviceKey] });
+      queryClient.invalidateQueries({
+        queryKey: ["device-modules", moduleDeviceKey]
+      });
       setConfigOpen(null);
     },
   });
@@ -164,14 +231,37 @@ export default function DeviceModulesSection({ deviceId, deviceUid, isAdmin }) {
     mutationFn: (name) =>
       apiFetch(`/devices/${moduleDeviceKey}/modules/${name}/run`, {
         method: "POST",
-        body: JSON.stringify({ action: "run" }),
+        body: JSON.stringify({
+          action: "run"
+        }),
       }),
     onSuccess: (_data, name) => {
-      queryClient.invalidateQueries({ queryKey: ["device-modules", moduleDeviceKey] });
+      queryClient.invalidateQueries({
+        queryKey: ["device-modules", moduleDeviceKey]
+      });
       if (name === "speedtest") {
-        queryClient.invalidateQueries({ queryKey: ["speedtest-results", moduleDeviceKey] });
-        queryClient.invalidateQueries({ queryKey: ["speedtest-summary", moduleDeviceKey] });
+        queryClient.invalidateQueries({
+          queryKey: ["speedtest-results", moduleDeviceKey]
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["speedtest-summary", moduleDeviceKey]
+        });
       }
+    },
+  });
+
+  const installMutation = useMutation({
+    mutationFn: (name) =>
+      apiFetch(`/devices/${moduleDeviceKey}/modules/${name}/run`, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "install"
+        }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["device-modules", moduleDeviceKey]
+      });
     },
   });
 
@@ -189,16 +279,24 @@ export default function DeviceModulesSection({ deviceId, deviceUid, isAdmin }) {
   const modules = data?.modules || [];
 
   function openConfig(mod) {
-    setDraftConfig({ ...(mod.config || {}) });
+    setDraftConfig({
+      ...(mod.config || {})
+    });
     setConfigOpen(mod.name);
   }
 
   function updateDraftField(key, value) {
-    setDraftConfig((prev) => ({ ...prev, [key]: value }));
+    setDraftConfig((prev) => ({
+      ...prev,
+      [key]: value
+    }));
   }
 
   function saveConfig(name) {
-    configMutation.mutate({ name, config: draftConfig });
+    configMutation.mutate({
+      name,
+      config: draftConfig
+    });
   }
 
   return (
@@ -217,62 +315,91 @@ export default function DeviceModulesSection({ deviceId, deviceUid, isAdmin }) {
         {modules.length === 0 ? (
           <div className="text-sm text-muted-foreground">No modules registered.</div>
         ) : (
-          modules.map((mod) => (
-            <div
-              key={mod.name}
-              className="flex flex-col gap-4 rounded-2xl border p-4 lg:flex-row lg:items-start lg:justify-between"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{mod.name}</span>
-                  <Badge variant="outline">v{mod.version}</Badge>
-                  {mod.enabled ? (
-                    <Badge variant="success">enabled</Badge>
-                  ) : (
-                    <Badge variant="warning">disabled</Badge>
-                  )}
+          modules.map((mod) => {
+            const needsInstall = mod.install && !mod.lastResult?.installed;
+            const installFailed = mod.lastResult?.installed === false;
+            return (
+              <div
+                key={mod.name}
+                className="flex flex-col gap-4 rounded-2xl border p-4 lg:flex-row lg:items-start lg:justify-between"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{mod.name}</span>
+                    <Badge variant="outline">v{mod.version}</Badge>
+                    {mod.enabled ? (
+                      <Badge variant="success">enabled</Badge>
+                    ) : (
+                      <Badge variant="warning">disabled</Badge>
+                    )}
+                    {needsInstall && (
+                      <Badge variant="destructive">needs install</Badge>
+                    )}
+                    {installFailed && (
+                      <Badge variant="destructive">install failed</Badge>
+                    )}
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{mod.description}</p>
+                  {mod.lastRunAt ? (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Last run: {new Date(mod.lastRunAt).toLocaleString()}
+                    </p>
+                  ) : null}
+                  {mod.lastResult?.error ? (
+                    <p className="mt-1 text-xs text-red-500">
+                      Error: {mod.lastResult.error}
+                    </p>
+                  ) : null}
+                  {hasSpeedtestResult(mod) ? <SpeedtestSummaryCard mod={mod} deviceUid={moduleDeviceKey} /> : null}
                 </div>
-                <p className="mt-1 text-sm text-muted-foreground">{mod.description}</p>
-                {mod.lastRunAt ? (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Last run: {new Date(mod.lastRunAt).toLocaleString()}
-                  </p>
-                ) : null}
-                {hasSpeedtestResult(mod) ? <SpeedtestSummaryCard mod={mod} deviceUid={moduleDeviceKey} /> : null}
+                <div className="flex flex-wrap items-center gap-2 lg:ml-4 lg:justify-end">
+                  {isAdmin ? (
+                    <>
+                      {needsInstall && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => installMutation.mutate(mod.name)}
+                          disabled={installMutation.isPending}
+                        >
+                          <Download className="mr-1 h-4 w-4" />
+                          Install
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openConfig(mod)}
+                      >
+                        <Settings className="mr-1 h-4 w-4" />
+                        Config
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => runMutation.mutate(mod.name)}
+                        disabled={runMutation.isPending || needsInstall}
+                      >
+                        <Activity className="mr-1 h-4 w-4" />
+                        Run
+                      </Button>
+                      <Button
+                        variant={mod.enabled ? "destructive" : "default"}
+                        size="sm"
+                        onClick={() => toggleMutation.mutate({
+                          name: mod.name,
+                          enabled: !mod.enabled
+                        })}
+                        disabled={toggleMutation.isPending || needsInstall}
+                      >
+                        {mod.enabled ? "Disable" : "Enable"}
+                      </Button>
+                    </>
+                  ) : null}
+                </div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 lg:ml-4 lg:justify-end">
-                {isAdmin ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openConfig(mod)}
-                    >
-                      <Settings className="mr-1 h-4 w-4" />
-                      Config
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => runMutation.mutate(mod.name)}
-                      disabled={runMutation.isPending}
-                    >
-                      <Activity className="mr-1 h-4 w-4" />
-                      Run
-                    </Button>
-                    <Button
-                      variant={mod.enabled ? "destructive" : "default"}
-                      size="sm"
-                      onClick={() => toggleMutation.mutate({ name: mod.name, enabled: !mod.enabled })}
-                      disabled={toggleMutation.isPending}
-                    >
-                      {mod.enabled ? "Disable" : "Enable"}
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </CardContent>
 

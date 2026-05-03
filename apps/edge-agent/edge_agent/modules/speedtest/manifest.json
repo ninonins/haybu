@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "Internet speed test using speedtest-cli",
   "entrypoint": "module.py",
+  "install": {
+    "description": "Install official Ookla speedtest binary",
+    "script": "curl -s https://install.speedtest.net/app/cli/install.deb.sh | bash && apt install -y speedtest",
+    "check": "which speedtest || which speedtest-cli"
+  },
   "config_schema": {
     "intervalSeconds": { "type": "number", "default": 3600, "min": 300, "max": 86400, "description": "Seconds between automatic runs" },
     "serverId": { "type": "string", "default": "", "description": "Optional server ID to pin tests" }

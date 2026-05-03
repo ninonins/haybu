@@ -27,6 +27,7 @@ class ModuleManifest:
     description: str
     entrypoint: str
     config_schema: dict | None = None
+    install: dict | None = None
 
 
 class Module:
@@ -39,6 +40,36 @@ class Module:
     @property
     def name(self) -> str:
         return self.manifest.name
+
+    def is_installed(self) -> bool:
+        install = self.manifest.install
+        if not install:
+            return True
+        check = install.get("check", "")
+        if not check:
+            return True
+        try:
+            import subprocess
+            subprocess.run(check, shell=True, check=True, capture_output=True, timeout=10)
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+    def install(self) -> dict:
+        install = self.manifest.install
+        if not install:
+            return {"installed": True, "message": "No install required"}
+        script = install.get("script", "")
+        if not script:
+            return {"installed": True, "message": "No install script defined"}
+        try:
+            import subprocess
+            result = subprocess.run(script, shell=True, capture_output=True, text=True, timeout=300)
+            if result.returncode == 0:
+                return {"installed": True, "message": result.stdout.strip() or "Installed successfully"}
+            return {"installed": False, "error": result.stderr.strip() or "Install failed"}
+        except Exception as exc:
+            return {"installed": False, "error": str(exc)}
 
     def init(self, config: dict | None = None) -> None:
         self._config = config or {}
@@ -68,6 +99,7 @@ def _load_manifest(module_dir: Path) -> ModuleManifest | None:
             description=data.get("description", ""),
             entrypoint=data.get("entrypoint", "module.py"),
             config_schema=data.get("config_schema"),
+            install=data.get("install"),
         )
     except (json.JSONDecodeError, KeyError):
         return None
@@ -212,6 +244,10 @@ class ModuleManager:
                 if result is not None:
                     self._pending_results[name] = {"result": result}
                 return {"result": result} if result is not None else {}
+            if action == "check_install":
+                return {"installed": mod.is_installed()}
+            if action == "install":
+                return mod.install()
             if hasattr(mod.instance, action):
                 handler = getattr(mod.instance, action)
                 result = handler()
@@ -228,6 +264,8 @@ class ModuleManager:
             name: {
                 "enabled": self.is_enabled(name),
                 "version": mod.manifest.version,
+                "installed": mod.is_installed(),
+                "needsInstall": bool(mod.manifest.install) and not mod.is_installed(),
             }
             for name, mod in self._modules.items()
         }

@@ -11,7 +11,11 @@ const MODULE_REGISTRY = [
       serverId: { type: "string", default: "", description: "Optional server ID to pin tests" }
     },
     supportedMetrics: ["download_mbps", "upload_mbps", "ping_ms", "jitter_ms", "server_name"],
-    requiresBinary: "speedtest-cli"
+    install: {
+      description: "Install official Ookla speedtest binary",
+      check: "which speedtest || which speedtest-cli",
+      script: "curl -s https://install.speedtest.net/app/cli/install.deb.sh | bash && apt install -y speedtest"
+    }
   }
 ];
 
@@ -35,7 +39,7 @@ export async function getDeviceModules(deviceId) {
       description: registryItem.description,
       configSchema: registryItem.configSchema,
       supportedMetrics: registryItem.supportedMetrics,
-      requiresBinary: registryItem.requiresBinary || null,
+      install: registryItem.install || null,
       enabled: instance?.enabled ?? false,
       config: instance?.config ?? {},
       lastRunAt: instance?.lastRunAt ?? null,
