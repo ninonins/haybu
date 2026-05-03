@@ -114,10 +114,7 @@ def heartbeat_loop(config, state: dict) -> bool:
                         state["monitoring"] = parsed["config"]
                         save_state(config.state_dir, state)
                         monitor_config = parsed["config"]
-                    if parsed.get("commands") is not None:
-                        for cmd in parsed["commands"]:
-                            result = module_manager.dispatch_command(cmd)
-                            print(f"Module command {cmd}: {result}")
+                    # Apply module config updates BEFORE dispatching commands
                     if parsed.get("modules") is not None:
                         module_configs = parsed["modules"]
                         state["modules"] = module_configs
@@ -127,6 +124,11 @@ def heartbeat_loop(config, state: dict) -> bool:
                                 module_manager.enable(name, cfg.get("config", {}))
                             else:
                                 module_manager.disable(name)
+                    # Now dispatch commands with correct module state
+                    if parsed.get("commands") is not None:
+                        for cmd in parsed["commands"]:
+                            result = module_manager.dispatch_command(cmd)
+                            print(f"Module command {cmd}: {result}")
                 except json.JSONDecodeError:
                     pass
                 time.sleep(config.heartbeat_interval_seconds)
